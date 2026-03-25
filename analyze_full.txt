@@ -1,0 +1,30 @@
+Analyzing app_dzikir_pagi_petang...                             
+
+   info - 'background' is deprecated and shouldn't be used. Use surface instead. This feature was deprecated after v3.18.0-0.1.pre - lib\core\theme\app_theme.dart:17:9 - deprecated_member_use
+   info - 'onBackground' is deprecated and shouldn't be used. Use onSurface instead. This feature was deprecated after v3.18.0-0.1.pre - lib\core\theme\app_theme.dart:18:9 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\theme\app_theme.dart:86:40 - deprecated_member_use
+   info - 'desiredAccuracy' is deprecated and shouldn't be used. use settings parameter with AndroidSettings, AppleSettings, WebSettings, or LocationSettings - lib\providers\app_provider.dart:131:9 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\screens\doa_harian_screen.dart:23:31 - unnecessary_underscores
+warning - Dead code - lib\screens\dzikir_detail_screen.dart:71:57 - dead_code
+warning - The left operand can't be null, so the right operand is never executed - lib\screens\dzikir_detail_screen.dart:71:60 - dead_null_aware_expression
+warning - Unused import: '../data/models/dzikir_model.dart' - lib\screens\dzikir_list_screen.dart:6:8 - unused_import
+warning - Unused import: '../widgets/wireframe_card.dart' - lib\screens\dzikir_list_screen.dart:8:8 - unused_import
+   info - Unnecessary use of multiple underscores - lib\screens\dzikir_list_screen.dart:143:37 - unnecessary_underscores
+warning - Unused import: 'package:intl/intl.dart' - lib\screens\home_screen.dart:3:8 - unused_import
+warning - Unused import: '../widgets/wireframe_card.dart' - lib\screens\home_screen.dart:7:8 - unused_import
+   info - Unnecessary use of 'toList' in a spread - lib\screens\jadwal_shalat_screen.dart:164:26 - unnecessary_to_list_in_spreads
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\screens\settings_screen.dart:79:19 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\screens\settings_screen.dart:81:19 - deprecated_member_use
+warning - Dead code - lib\screens\tasbih_screen.dart:48:57 - dead_code
+warning - The left operand can't be null, so the right operand is never executed - lib\screens\tasbih_screen.dart:48:60 - dead_null_aware_expression
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\tasbih_screen.dart:185:54 - deprecated_member_use
+  error - The type 'Prayer' isn't exhaustively matched by the switch cases since it doesn't match the pattern 'Prayer.sunrise' - lib\services\prayer_time_service.dart:65:5 - non_exhaustive_switch_statement
+warning - The value of the field '_pagiProgressKey' isn't used - lib\services\storage_service.dart:4:23 - unused_field
+warning - The value of the field '_petangProgressKey' isn't used - lib\services\storage_service.dart:5:23 - unused_field
+   info - Statements in a while should be enclosed in a block - lib\services\storage_service.dart:41:33 - curly_braces_in_flow_control_structures
+   info - Statements in a while should be enclosed in a block - lib\services\storage_service.dart:54:33 - curly_braces_in_flow_control_structures
+warning - The value of the local variable 'stackCard' isn't used - lib\widgets\wireframe_card.dart:97:12 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\wireframe_card.dart:99:47 - deprecated_member_use
+  error - The name 'MyApp' isn't a class - test\widget_test.dart:16:35 - creation_with_non_type
+
+26 issues found. (ran in 4.4s)

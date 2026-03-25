@@ -1,0 +1,20 @@
+Analyzing app_dzikir_pagi_petang...                             
+
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\theme\app_theme.dart:84:40 - deprecated_member_use
+   info - 'desiredAccuracy' is deprecated and shouldn't be used. use settings parameter with AndroidSettings, AppleSettings, WebSettings, or LocationSettings - lib\providers\app_provider.dart:131:9 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\screens\doa_harian_screen.dart:23:31 - unnecessary_underscores
+warning - Dead code - lib\screens\dzikir_detail_screen.dart:71:57 - dead_code
+warning - The left operand can't be null, so the right operand is never executed - lib\screens\dzikir_detail_screen.dart:71:60 - dead_null_aware_expression
+   info - Unnecessary use of multiple underscores - lib\screens\dzikir_list_screen.dart:141:37 - unnecessary_underscores
+   info - Unnecessary use of 'toList' in a spread - lib\screens\jadwal_shalat_screen.dart:164:26 - unnecessary_to_list_in_spreads
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\screens\settings_screen.dart:79:19 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\screens\settings_screen.dart:81:19 - deprecated_member_use
+warning - Dead code - lib\screens\tasbih_screen.dart:48:57 - dead_code
+warning - The left operand can't be null, so the right operand is never executed - lib\screens\tasbih_screen.dart:48:60 - dead_null_aware_expression
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\tasbih_screen.dart:185:54 - deprecated_member_use
+   info - Statements in a while should be enclosed in a block - lib\services\storage_service.dart:39:33 - curly_braces_in_flow_control_structures
+   info - Statements in a while should be enclosed in a block - lib\services\storage_service.dart:52:33 - curly_braces_in_flow_control_structures
+warning - The value of the local variable 'stackCard' isn't used - lib\widgets\wireframe_card.dart:97:12 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\wireframe_card.dart:99:47 - deprecated_member_use
+
+16 issues found. (ran in 6.4s)
