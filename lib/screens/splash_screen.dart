@@ -39,23 +39,28 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.black, width: 2.5),
-            color: Colors.transparent,
-          ),
-          child: const Text(
-            'DZIKIR\nPAGI PETANG',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 4,
-              height: 1.4,
-              color: AppColors.black,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'logo.png',
+              width: 132,
+              height: 132,
+              fit: BoxFit.contain,
             ),
-          ),
+            const SizedBox(height: 22),
+            const Text(
+              'DZIKIR\nPAGI PETANG',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 4,
+                height: 1.4,
+                color: AppColors.black,
+              ),
+            ),
+          ],
         ),
       ),
     );

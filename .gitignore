@@ -11,6 +11,8 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+analyze_*.txt
+build_log*.txt
 
 # IntelliJ related
 *.iml
@@ -32,6 +34,13 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+android/.kotlin/
+
+# Root-only helper dependencies used for one-off asset generation.
+/node_modules/
+/package.json
+/package-lock.json
+/gen_notif_icon.js
 
 # Symbolication related
 app.*.symbols

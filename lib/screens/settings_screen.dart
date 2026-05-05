@@ -4,8 +4,19 @@ import '../core/theme/app_colors.dart';
 import '../providers/app_provider.dart';
 import '../widgets/app_bar_helpers.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  @override
+  void dispose() {
+    context.read<AppProvider>().stopAdhanPreview();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -191,7 +202,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  'Developer saepl.',
+                  'Developer mutatit.',
                   style: TextStyle(
                     fontSize: 13,
                     height: 1.6,

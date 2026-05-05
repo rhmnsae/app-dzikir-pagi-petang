@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:adhan/adhan.dart';
@@ -16,7 +15,7 @@ import '../widgets/grid_background.dart'; // Import for grid background
 import '../services/notification_service.dart';
 import 'package:audioplayers/audioplayers.dart';
 
-class AppProvider extends ChangeNotifier {
+class AppProvider extends ChangeNotifier with WidgetsBindingObserver {
   final StorageService _storage;
 
   AppProvider(this._storage);
@@ -28,12 +27,15 @@ class AppProvider extends ChangeNotifier {
   bool _locationLoading = false;
   String? _locationError;
   DateTime _now = DateTime.now();
+  Timer? _clockTimer;
+  bool _disposed = false;
+  Future<void> _scheduleChain = Future.value();
   StreamSubscription<ServiceStatus>? _serviceStatusStreamSubscription;
 
   bool _adhanEnabled = false;
   bool _useAdhanSound = true;
   bool _dzikirEnabled = false;
-  
+
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isPlayingAdzan = false;
   bool _isPlayingSubuh = false;
@@ -62,26 +64,43 @@ class AppProvider extends ChangeNotifier {
   bool get isPlayingBiasa => _isPlayingBiasa;
   StorageService get storage => _storage;
 
-  int get pagiCompleted =>
-      _pagiCounters.where((c) => c >= dzikirPagiList[_pagiCounters.indexOf(c)].repeatCount).length;
+  int get pagiCompleted => _pagiCounters
+      .where((c) => c >= dzikirPagiList[_pagiCounters.indexOf(c)].repeatCount)
+      .length;
 
-  int get petangCompleted =>
-      _petangCounters.where((c) => c >= dzikirPetangList[_petangCounters.indexOf(c)].repeatCount).length;
+  int get petangCompleted => _petangCounters
+      .where(
+        (c) => c >= dzikirPetangList[_petangCounters.indexOf(c)].repeatCount,
+      )
+      .length;
 
   String get hijriDate {
     final h = HijriCalendar.now();
     final monthNames = [
-      '', 'Muharram', 'Shafar', 'Rabi\'ul Awwal', 'Rabi\'ul Akhir',
-      'Jumadil Awwal', 'Jumadil Akhir', 'Rajab', 'Sya\'ban',
-      'Ramadhan', 'Syawal', 'Dzulqa\'dah', 'Dzulhijjah'
+      '',
+      'Muharram',
+      'Shafar',
+      'Rabi\'ul Awwal',
+      'Rabi\'ul Akhir',
+      'Jumadil Awwal',
+      'Jumadil Akhir',
+      'Rajab',
+      'Sya\'ban',
+      'Ramadhan',
+      'Syawal',
+      'Dzulqa\'dah',
+      'Dzulhijjah',
     ];
     return '${h.hDay} ${monthNames[h.hMonth]} ${h.hYear} H';
   }
 
-  String get masehibDate => DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(_now);
+  String get masehibDate =>
+      DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(_now);
 
   // ─── Init ────────────────────────────────────────────
   Future<void> init() async {
+    WidgetsBinding.instance.addObserver(this);
+
     // Load saved location
     final savedLat = _storage.getSavedLat();
     final savedLon = _storage.getSavedLon();
@@ -102,17 +121,17 @@ class AppProvider extends ChangeNotifier {
     _adhanEnabled = _storage.getNotifAdzan();
     _useAdhanSound = _storage.getUseAdhanSound();
     _dzikirEnabled = _storage.getNotifDzikir();
-    
-    if (_adhanEnabled || _dzikirEnabled) {
-      NotificationService().init();
-      _refreshSchedules();
-    }
 
     _calculatePrayerTimes();
     notifyListeners();
 
+    if (_adhanEnabled || _dzikirEnabled) {
+      unawaited(NotificationService().init());
+      unawaited(_refreshSchedules());
+    }
+
     // Try to get fresh location in background
-    _refreshLocation();
+    unawaited(_refreshLocation());
 
     // Listen to GPS status
     _listenToGpsStatus();
@@ -129,19 +148,28 @@ class AppProvider extends ChangeNotifier {
   }
 
   void _startTimer() {
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(seconds: 1));
+    _clockTimer?.cancel();
+    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       _now = DateTime.now();
-      notifyListeners();
-      return true;
+      if (!_disposed) notifyListeners();
     });
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      unawaited(stopAdhanPreview());
+    }
+  }
+
   void _listenToGpsStatus() {
-    _serviceStatusStreamSubscription =
-        Geolocator.getServiceStatusStream().listen((ServiceStatus status) {
+    _serviceStatusStreamSubscription = Geolocator.getServiceStatusStream().listen((
+      ServiceStatus status,
+    ) {
       if (status == ServiceStatus.enabled) {
-        // If the dialog is open, we can let user dismiss it, 
+        // If the dialog is open, we can let user dismiss it,
         // or attempt to pop if we know it's our dialog. Simplest is to just refresh.
         _refreshLocation();
       } else if (status == ServiceStatus.disabled) {
@@ -175,7 +203,7 @@ class AppProvider extends ChangeNotifier {
                   child: CustomPaint(
                     painter: GridPainter(
                       spacing: 28.0,
-                      color: AppColors.black.withOpacity(0.06),
+                      color: AppColors.black.withValues(alpha: 0.06),
                       strokeWidth: 1.0,
                     ),
                   ),
@@ -196,10 +224,7 @@ class AppProvider extends ChangeNotifier {
                       const SizedBox(height: 16),
                       const Text(
                         'Layanan lokasi GPS di perangkat Anda telah dimatikan. Aplikasi membutuhkan GPS untuk mendeteksi arah kiblat dan jadwal sholat dengan akurat.\n\nMohon sentuh tombol di bawah untuk mengaktifkannya kembali.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.black,
-                        ),
+                        style: TextStyle(fontSize: 14, color: AppColors.black),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),
@@ -236,7 +261,11 @@ class AppProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
+    WidgetsBinding.instance.removeObserver(this);
+    _clockTimer?.cancel();
     _serviceStatusStreamSubscription?.cancel();
+    unawaited(stopAdhanPreview(notify: false));
     _audioPlayer.dispose();
     super.dispose();
   }
@@ -283,7 +312,9 @@ class AppProvider extends ChangeNotifier {
       }
 
       final pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
       _lat = pos.latitude;
       _lon = pos.longitude;
@@ -304,6 +335,9 @@ class AppProvider extends ChangeNotifier {
       await _storage.saveLocation(_lat, _lon);
       await _storage.saveCity(_cityName);
       _calculatePrayerTimes();
+      if (_adhanEnabled || _dzikirEnabled) {
+        await _refreshSchedules();
+      }
     } catch (e) {
       _locationError = 'Gagal mendapatkan lokasi: $e';
     }
@@ -320,12 +354,13 @@ class AppProvider extends ChangeNotifier {
     if (_pagiCounters[index] < dzikirPagiList[index].repeatCount) {
       _pagiCounters[index]++;
       await _storage.savePagiCounter(index, _pagiCounters[index]);
-      
-      if (pagiCompleted >= dzikirPagiList.length && !_storage.hasCompletedPagiToday()) {
+
+      if (pagiCompleted >= dzikirPagiList.length &&
+          !_storage.hasCompletedPagiToday()) {
         await _storage.markPagiCompleted();
         await _refreshSchedules();
       }
-      
+
       notifyListeners();
     }
   }
@@ -340,12 +375,13 @@ class AppProvider extends ChangeNotifier {
     if (_petangCounters[index] < dzikirPetangList[index].repeatCount) {
       _petangCounters[index]++;
       await _storage.savePetangCounter(index, _petangCounters[index]);
-      
-      if (petangCompleted >= dzikirPetangList.length && !_storage.hasCompletedPetangToday()) {
+
+      if (petangCompleted >= dzikirPetangList.length &&
+          !_storage.hasCompletedPetangToday()) {
         await _storage.markPetangCompleted();
         await _refreshSchedules();
       }
-      
+
       notifyListeners();
     }
   }
@@ -373,10 +409,20 @@ class AppProvider extends ChangeNotifier {
   Future<void> setCalculationMethod(int method) async {
     await _storage.saveCalculationMethod(method);
     _calculatePrayerTimes();
+    if (_adhanEnabled) {
+      await _refreshSchedules();
+    }
     notifyListeners();
   }
 
   Future<void> _refreshSchedules() async {
+    _scheduleChain = _scheduleChain
+        .catchError((_) {})
+        .then((_) => _refreshSchedulesInternal());
+    await _scheduleChain;
+  }
+
+  Future<void> _refreshSchedulesInternal() async {
     final ns = NotificationService();
     await ns.init();
 
@@ -390,7 +436,11 @@ class AppProvider extends ChangeNotifier {
 
     if (_adhanEnabled && _prayerTimes != null) {
       final coordinates = _prayerTimes!.coordinates;
-      await ns.scheduleAdhanTimes(coordinates, _useAdhanSound);
+      await ns.scheduleAdhanTimes(
+        coordinates,
+        _useAdhanSound,
+        methodIndex: _storage.getCalculationMethod(),
+      );
     } else {
       await ns.cancelAdhanSchedules();
     }
@@ -400,11 +450,18 @@ class AppProvider extends ChangeNotifier {
     _adhanEnabled = val;
     notifyListeners();
     await _storage.saveNotifAdzan(val);
-    
+
     if (val) {
-      await NotificationService().requestPermissions();
+      final granted = await NotificationService().requestPermissions();
+      if (!granted) {
+        _adhanEnabled = false;
+        await _storage.saveNotifAdzan(false);
+        await _refreshSchedules();
+        notifyListeners();
+        return;
+      }
     }
-    
+
     await _refreshSchedules();
     notifyListeners(); // Final refresh after schedules are updated
   }
@@ -413,11 +470,18 @@ class AppProvider extends ChangeNotifier {
     _dzikirEnabled = val;
     notifyListeners();
     await _storage.saveNotifDzikir(val);
-    
+
     if (val) {
-      await NotificationService().requestPermissions();
+      final granted = await NotificationService().requestPermissions();
+      if (!granted) {
+        _dzikirEnabled = false;
+        await _storage.saveNotifDzikir(false);
+        await _refreshSchedules();
+        notifyListeners();
+        return;
+      }
     }
-    
+
     await _refreshSchedules();
     notifyListeners(); // Final refresh after schedules are updated
   }
@@ -426,25 +490,31 @@ class AppProvider extends ChangeNotifier {
     _useAdhanSound = val;
     await _storage.saveUseAdhanSound(val);
     if (_adhanEnabled) {
-      _refreshSchedules();
+      await _refreshSchedules();
     }
     notifyListeners();
+  }
+
+  Future<void> stopAdhanPreview({bool notify = true}) async {
+    if (!_isPlayingBiasa && !_isPlayingAdzan && !_isPlayingSubuh) return;
+
+    await _audioPlayer.stop();
+    _isPlayingBiasa = false;
+    _isPlayingAdzan = false;
+    _isPlayingSubuh = false;
+    if (notify && !_disposed) notifyListeners();
   }
 
   Future<void> testBiasa() async {
     if (_isPlayingBiasa || _isPlayingAdzan || _isPlayingSubuh) {
       bool wasPlayingThis = _isPlayingBiasa;
-      await _audioPlayer.stop();
-      _isPlayingBiasa = false;
-      _isPlayingAdzan = false;
-      _isPlayingSubuh = false;
-      notifyListeners();
+      await stopAdhanPreview();
       if (wasPlayingThis) return;
     }
-    
+
     _isPlayingBiasa = true;
     notifyListeners();
-    
+
     final source = AssetSource('audio/biasa.wav');
     await _audioPlayer.play(source);
   }
@@ -452,11 +522,7 @@ class AppProvider extends ChangeNotifier {
   Future<void> testAudio({required bool isSubuh}) async {
     if (_isPlayingAdzan || _isPlayingSubuh || _isPlayingBiasa) {
       bool wasPlayingThis = isSubuh ? _isPlayingSubuh : _isPlayingAdzan;
-      await _audioPlayer.stop();
-      _isPlayingAdzan = false;
-      _isPlayingSubuh = false;
-      _isPlayingBiasa = false;
-      notifyListeners();
+      await stopAdhanPreview();
       if (wasPlayingThis) return;
     }
 
@@ -467,8 +533,8 @@ class AppProvider extends ChangeNotifier {
     }
     notifyListeners();
 
-    final source = isSubuh 
-        ? AssetSource('audio/adhan_subuh.mp3') 
+    final source = isSubuh
+        ? AssetSource('audio/adhan_subuh.mp3')
         : AssetSource('audio/adhan.mp3');
 
     await _audioPlayer.play(source);
@@ -481,14 +547,12 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> testDemoNotification() async {
-    print('=== DEBUG DEMO NOTIFICATION: AppProvider called ===');
     try {
       await NotificationService().requestPermissions();
-      print('=== DEBUG DEMO NOTIFICATION: Permissions requested ===');
       await NotificationService().showDemoNotification();
     } catch (e, stack) {
-      print('=== DEBUG DEMO NOTIFICATION ERROR IN PROVIDER: \$e');
-      print(stack);
+      debugPrint('Demo notification error in provider: $e');
+      debugPrint('$stack');
     }
   }
 }

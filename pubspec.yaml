@@ -16,6 +16,8 @@ dependencies:
 
   # Storage
   shared_preferences: ^2.3.2
+  sqflite: ^2.4.2
+  path: ^1.9.1
 
   # Location
   geolocator: ^13.0.1
@@ -46,15 +48,18 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/logo_dzikir.png"
+  image_path: "logo.png"
+  remove_alpha_ios: true
   min_sdk_android: 21
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/images/logo_dzikir.png"
+  adaptive_icon_foreground: "logo.png"
 
 flutter:
   uses-material-design: true
 
   assets:
+    - logo.png
+    - logo.svg
     - assets/audio/
     - assets/images/
 
@@ -68,8 +73,8 @@ flutter:
 flutter_native_splash:
   color: "#ffffff"
   color_dark: "#303841"
-  image: "assets/images/logo_dzikir.png"
+  image: "logo.png"
   android_12:
     color: "#ffffff"
     color_dark: "#303841"
-    image: "assets/images/logo_dzikir.png"
+    image: "logo.png"
