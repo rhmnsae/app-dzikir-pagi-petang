@@ -397,19 +397,29 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> toggleAdhan(bool val) async {
-    if (val) await NotificationService().requestPermissions();
     _adhanEnabled = val;
-    await _storage.saveNotifAdzan(val);
-    _refreshSchedules();
     notifyListeners();
+    await _storage.saveNotifAdzan(val);
+    
+    if (val) {
+      await NotificationService().requestPermissions();
+    }
+    
+    await _refreshSchedules();
+    notifyListeners(); // Final refresh after schedules are updated
   }
 
   Future<void> toggleDzikir(bool val) async {
-    if (val) await NotificationService().requestPermissions();
     _dzikirEnabled = val;
-    await _storage.saveNotifDzikir(val);
-    _refreshSchedules();
     notifyListeners();
+    await _storage.saveNotifDzikir(val);
+    
+    if (val) {
+      await NotificationService().requestPermissions();
+    }
+    
+    await _refreshSchedules();
+    notifyListeners(); // Final refresh after schedules are updated
   }
 
   Future<void> setUseAdhanSound(bool val) async {

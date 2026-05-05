@@ -3,6 +3,7 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:adhan/adhan.dart';
 import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -45,33 +46,51 @@ class NotificationService {
   Future<bool> requestPermissions() async {
     if (!_initialized) await init();
 
-    bool granted = false;
-    final androidImplementation = _notificationsPlugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >();
+    try {
+      // 1. Request Notification Permission (Android 13+)
+      final status = await Permission.notification.status;
+      if (!status.isGranted) {
+        await Permission.notification.request();
+      }
 
-    if (androidImplementation != null) {
-      final notifResult = await androidImplementation
-          .requestNotificationsPermission();
-      final alarmResult = await androidImplementation
-          .requestExactAlarmsPermission();
-      granted = (notifResult ?? false) && (alarmResult ?? false);
-    }
+      // 2. Exact Alarms (Android 12+)
+      // Since we use USE_EXACT_ALARM in manifest, it's granted at install time on Android 13+.
+      // But we can still check it. For Android 14+, calling requestExactAlarmsPermission
+      // can trigger a system settings redirect, so we skip it if already granted
+      // or if using USE_EXACT_ALARM.
+      
+      final androidImplementation = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
 
-    final iosImplementation = _notificationsPlugin
-        .resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin
-        >();
-    if (iosImplementation != null) {
-      final iosResult = await iosImplementation.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
-      granted = iosResult ?? false;
+      if (androidImplementation != null) {
+        // Just checking if we can schedule exact alarms
+        // On Android 13+ with USE_EXACT_ALARM, this is typically true.
+        bool? canSchedule = await androidImplementation.canScheduleExactNotifications();
+        if (canSchedule == false) {
+          // If for some reason it's not granted, we might want to request it,
+          // but we do it carefully to avoid hanging.
+          await androidImplementation.requestExactAlarmsPermission();
+        }
+      }
+
+      final iosImplementation = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >();
+      if (iosImplementation != null) {
+        await iosImplementation.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+      }
+      return true;
+    } catch (e) {
+      print('Error requesting permissions: $e');
+      return false;
     }
-    return granted;
   }
 
   AndroidNotificationDetails _adhanAndroidDetails() {

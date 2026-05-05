@@ -68,8 +68,8 @@ flutter:
 flutter_native_splash:
   color: "#ffffff"
   color_dark: "#303841"
-  image: "assets/images/transparent.png"
+  image: "assets/images/logo_dzikir.png"
   android_12:
     color: "#ffffff"
     color_dark: "#303841"
-    image: "assets/images/transparent.png"
+    image: "assets/images/logo_dzikir.png"
