@@ -1,6 +1,18 @@
 import 'package:adhan/adhan.dart';
 import 'package:intl/intl.dart';
 
+class NextPrayerInfo {
+  const NextPrayerInfo({
+    required this.name,
+    required this.time,
+    required this.isTomorrow,
+  });
+
+  final String name;
+  final DateTime time;
+  final bool isTomorrow;
+}
+
 class PrayerTimeService {
   static PrayerTimes? getPrayerTimes({
     required double lat,
@@ -79,6 +91,55 @@ class PrayerTimeService {
       case Prayer.none:
         return 'Subuh';
     }
+  }
+
+  static NextPrayerInfo? getNextPrayerInfo({
+    required double lat,
+    required double lon,
+    required int methodIndex,
+    DateTime? now,
+  }) {
+    final current = now ?? DateTime.now();
+    final todayTimes = getPrayerTimes(
+      lat: lat,
+      lon: lon,
+      methodIndex: methodIndex,
+      date: current,
+    );
+    if (todayTimes == null) return null;
+
+    final todayNext = _firstUpcomingPrayer(todayTimes, current);
+    if (todayNext != null) return todayNext;
+
+    final tomorrow = current.add(const Duration(days: 1));
+    final tomorrowTimes = getPrayerTimes(
+      lat: lat,
+      lon: lon,
+      methodIndex: methodIndex,
+      date: tomorrow,
+    );
+    if (tomorrowTimes == null) return null;
+
+    return NextPrayerInfo(
+      name: 'Subuh',
+      time: tomorrowTimes.fajr,
+      isTomorrow: true,
+    );
+  }
+
+  static NextPrayerInfo? _firstUpcomingPrayer(PrayerTimes times, DateTime now) {
+    final prayers = <NextPrayerInfo>[
+      NextPrayerInfo(name: 'Subuh', time: times.fajr, isTomorrow: false),
+      NextPrayerInfo(name: 'Dhuhur', time: times.dhuhr, isTomorrow: false),
+      NextPrayerInfo(name: 'Ashar', time: times.asr, isTomorrow: false),
+      NextPrayerInfo(name: 'Maghrib', time: times.maghrib, isTomorrow: false),
+      NextPrayerInfo(name: 'Isya', time: times.isha, isTomorrow: false),
+    ];
+
+    for (final prayer in prayers) {
+      if (prayer.time.isAfter(now)) return prayer;
+    }
+    return null;
   }
 
   static Map<String, DateTime?> getAllTimes(PrayerTimes times) {

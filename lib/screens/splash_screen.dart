@@ -25,7 +25,7 @@ class _SplashScreenState extends State<SplashScreen> {
       }
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          pageBuilder: (_, __, ___) =>
+          pageBuilder: (context, animation, secondaryAnimation) =>
               isFirst ? const PermissionScreen() : const HomeScreen(),
           transitionDuration: Duration.zero,
           reverseTransitionDuration: Duration.zero,

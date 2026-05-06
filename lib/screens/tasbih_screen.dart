@@ -57,7 +57,10 @@ class _TasbihScreenState extends State<TasbihScreen>
   }
 
   void _reset() => setState(() => _count = 0);
-  void _resetAll() => setState(() { _count = 0; _session = 0; });
+  void _resetAll() => setState(() {
+    _count = 0;
+    _session = 0;
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +105,9 @@ class _TasbihScreenState extends State<TasbihScreen>
                 ),
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 24),
-                  width: 1, height: 40, color: AppColors.grey400,
+                  width: 1,
+                  height: 40,
+                  color: AppColors.grey400,
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,10 +156,17 @@ class _TasbihScreenState extends State<TasbihScreen>
                 ..._presets.map((p) {
                   final selected = p == _target;
                   return GestureDetector(
-                    onTap: () => setState(() { _target = p; _count = 0; _session = 0; }),
+                    onTap: () => setState(() {
+                      _target = p;
+                      _count = 0;
+                      _session = 0;
+                    }),
                     child: Container(
                       margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: selected ? AppColors.black : Colors.transparent,
                         border: Border.all(color: AppColors.black, width: 1.5),
@@ -170,7 +182,7 @@ class _TasbihScreenState extends State<TasbihScreen>
                       ),
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),
@@ -191,7 +203,10 @@ class _TasbihScreenState extends State<TasbihScreen>
                         height: 200,
                         decoration: BoxDecoration(
                           color: done ? AppColors.black : Colors.transparent,
-                          border: Border.all(color: AppColors.black, width: 1.5),
+                          border: Border.all(
+                            color: AppColors.black,
+                            width: 1.5,
+                          ),
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
@@ -212,7 +227,9 @@ class _TasbihScreenState extends State<TasbihScreen>
                                 fontSize: 10,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 2,
-                                color: done ? AppColors.grey400 : AppColors.grey600,
+                                color: done
+                                    ? AppColors.grey400
+                                    : AppColors.grey600,
                               ),
                             ),
                           ],
@@ -234,7 +251,9 @@ class _TasbihScreenState extends State<TasbihScreen>
                     onTap: _reset,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 10),
+                        horizontal: 24,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         border: Border.all(color: AppColors.black, width: 1.5),
                       ),

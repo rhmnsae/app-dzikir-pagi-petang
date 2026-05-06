@@ -42,11 +42,11 @@ class _QiblaScreenState extends State<QiblaScreen> {
   Widget build(BuildContext context) {
     final prov = context.watch<AppProvider>();
     final qibla = QiblaService.getQiblaAngle(prov.lat, prov.lon);
-    final dist  = QiblaService.getDistanceToMakkah(prov.lat, prov.lon);
-    final heading   = _heading ?? 0.0;
-    final diff      = ((qibla - heading) % 360 + 360) % 360;
+    final dist = QiblaService.getDistanceToMakkah(prov.lat, prov.lon);
+    final heading = _heading ?? 0.0;
+    final diff = ((qibla - heading) % 360 + 360) % 360;
     final isAligned = diff < 5 || diff > 355;
-    final dialRad   = -heading * math.pi / 180;
+    final dialRad = -heading * math.pi / 180;
 
     return Scaffold(
       appBar: AppBar(
@@ -98,7 +98,8 @@ class _QiblaScreenState extends State<QiblaScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('LOKASI',
+                      const Text(
+                        'LOKASI',
                         style: TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w900,
@@ -205,8 +206,12 @@ class _QiblaScreenState extends State<QiblaScreen> {
                             : 'Putar ${diff.round()}° ke arah kiblat',
                         style: TextStyle(
                           fontSize: 12,
-                          fontWeight: isAligned ? FontWeight.w900 : FontWeight.w500,
-                          color: isAligned ? AppColors.black : AppColors.grey600,
+                          fontWeight: isAligned
+                              ? FontWeight.w900
+                              : FontWeight.w500,
+                          color: isAligned
+                              ? AppColors.black
+                              : AppColors.grey600,
                           letterSpacing: 0.3,
                         ),
                       ),
@@ -223,8 +228,8 @@ class _QiblaScreenState extends State<QiblaScreen> {
                     _compassAvailable && _heading != null
                         ? 'Sensor aktif  ·  ${heading.toStringAsFixed(0)}° heading'
                         : _compassAvailable
-                            ? 'Menunggu sensor...'
-                            : 'Sensor kompas tidak tersedia',
+                        ? 'Menunggu sensor...'
+                        : 'Sensor kompas tidak tersedia',
                     style: const TextStyle(
                       fontSize: 10,
                       color: AppColors.grey600,
@@ -331,13 +336,11 @@ class _DialPainter extends CustomPainter {
   _DialPainter({required this.qiblaAngle});
 
   static const _black = AppColors.black;
-  static const _white = AppColors.white;
-
   @override
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
     final cy = size.height / 2;
-    final r  = cx;
+    final r = cx;
 
     final thinLine = Paint()
       ..color = _black.withValues(alpha: 0.10)
@@ -352,14 +355,22 @@ class _DialPainter extends CustomPainter {
     for (int i = 0; i < 4; i++) {
       final angle = i * math.pi / 2;
       canvas.drawLine(
-        Offset(cx + r * 0.32 * math.cos(angle), cy + r * 0.32 * math.sin(angle)),
-        Offset(cx + r * 0.90 * math.cos(angle), cy + r * 0.90 * math.sin(angle)),
+        Offset(
+          cx + r * 0.32 * math.cos(angle),
+          cy + r * 0.32 * math.sin(angle),
+        ),
+        Offset(
+          cx + r * 0.90 * math.cos(angle),
+          cy + r * 0.90 * math.sin(angle),
+        ),
         thinLine,
       );
     }
 
     // ── 16 tick marks ───────────────────────────────────────────────────
-    final tickPaint = Paint()..color = _black..strokeCap = StrokeCap.square;
+    final tickPaint = Paint()
+      ..color = _black
+      ..strokeCap = StrokeCap.square;
     for (int i = 0; i < 16; i++) {
       final angle = (i * 22.5 - 90) * math.pi / 180;
       final isMain = i % 4 == 0;
@@ -368,7 +379,10 @@ class _DialPainter extends CustomPainter {
       tickPaint.strokeWidth = isMain ? 2.0 : 1.0;
       canvas.drawLine(
         Offset(cx + (r - 4) * math.cos(angle), cy + (r - 4) * math.sin(angle)),
-        Offset(cx + (r - 4 - len) * math.cos(angle), cy + (r - 4 - len) * math.sin(angle)),
+        Offset(
+          cx + (r - 4 - len) * math.cos(angle),
+          cy + (r - 4 - len) * math.sin(angle),
+        ),
         tickPaint,
       );
     }
@@ -398,7 +412,9 @@ class _DialPainter extends CustomPainter {
         canvas.drawLine(
           Offset(lx - 6, underY),
           Offset(lx + 6, underY),
-          Paint()..color = _black..strokeWidth = 2,
+          Paint()
+            ..color = _black
+            ..strokeWidth = 2,
         );
       }
       tp.paint(canvas, Offset(lx - tp.width / 2, ly - tp.height / 2));
@@ -406,14 +422,21 @@ class _DialPainter extends CustomPainter {
 
     // ── Qibla needle ────────────────────────────────────────────────────
     final qRad = (qiblaAngle - 90) * math.pi / 180;
-    final tipDist  = r * 0.85;
+    final tipDist = r * 0.85;
     final tailDist = r * 0.22;
-    final qTip  = Offset(cx + tipDist * math.cos(qRad), cy + tipDist * math.sin(qRad));
-    final qTail = Offset(cx - tailDist * math.cos(qRad), cy - tailDist * math.sin(qRad));
+    final qTip = Offset(
+      cx + tipDist * math.cos(qRad),
+      cy + tipDist * math.sin(qRad),
+    );
+    final qTail = Offset(
+      cx - tailDist * math.cos(qRad),
+      cy - tailDist * math.sin(qRad),
+    );
 
     // Needle body — solid thick black line
     canvas.drawLine(
-      qTail, qTip,
+      qTail,
+      qTip,
       Paint()
         ..color = _black
         ..strokeWidth = 3
@@ -489,26 +512,43 @@ class _NoCompass extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text('SENSOR', style: TextStyle(
-            fontSize: 9, fontWeight: FontWeight.w900,
-            letterSpacing: 2, color: AppColors.grey600,
-          )),
+          const Text(
+            'SENSOR',
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 2,
+              color: AppColors.grey600,
+            ),
+          ),
           const SizedBox(height: 2),
-          const Text('TIDAK TERSEDIA', style: TextStyle(
-            fontSize: 9, fontWeight: FontWeight.w700,
-            letterSpacing: 1.5, color: AppColors.grey400,
-          )),
+          const Text(
+            'TIDAK TERSEDIA',
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.5,
+              color: AppColors.grey400,
+            ),
+          ),
           const SizedBox(height: 16),
           Text(
             '${qiblaAngle.toStringAsFixed(1)}°',
             style: const TextStyle(
-              fontSize: 36, fontWeight: FontWeight.w900,
-              color: AppColors.black, height: 1,
+              fontSize: 36,
+              fontWeight: FontWeight.w900,
+              color: AppColors.black,
+              height: 1,
             ),
           ),
-          const Text('dari Utara', style: TextStyle(
-            fontSize: 11, color: AppColors.grey600, fontWeight: FontWeight.w500,
-          )),
+          const Text(
+            'dari Utara',
+            style: TextStyle(
+              fontSize: 11,
+              color: AppColors.grey600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
@@ -541,17 +581,31 @@ class _Stat extends StatelessWidget {
             ? CrossAxisAlignment.end
             : CrossAxisAlignment.start,
         children: [
-          Text(label, textAlign: align, style: const TextStyle(
-            fontSize: 9, fontWeight: FontWeight.w900,
-            letterSpacing: 2, color: AppColors.grey600,
-          )),
+          Text(
+            label,
+            textAlign: align,
+            style: const TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 2,
+              color: AppColors.grey600,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(value, textAlign: align, style: const TextStyle(
-            fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.black,
-          )),
-          Text(sub, textAlign: align, style: const TextStyle(
-            fontSize: 10, color: AppColors.grey600,
-          )),
+          Text(
+            value,
+            textAlign: align,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: AppColors.black,
+            ),
+          ),
+          Text(
+            sub,
+            textAlign: align,
+            style: const TextStyle(fontSize: 10, color: AppColors.grey600),
+          ),
         ],
       ),
     );

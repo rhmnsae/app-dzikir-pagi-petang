@@ -1,13 +1,16 @@
+import { apkDownloadUrl, githubReleasesUrl } from '../utils/downloadLinks';
+
 const Download = () => {
   return (
     <section className="section download-section" id="download">
       <div className="container download-layout">
         <div className="download-copy">
           <span className="eyebrow eyebrow-invert">Rilis terbuka</span>
-          <h2>Dapatkan aplikasinya.</h2>
+          <h2>Dapatkan aplikasi resmi.</h2>
           <p>
             APK didistribusikan langsung melalui GitHub agar sumber rilisnya
             jelas, mudah dicek, dan tetap bebas dari lapisan yang tidak perlu.
+            Halaman website dan informasi dukungan dikelola bersama MUTATIT.
           </p>
         </div>
 
@@ -24,12 +27,19 @@ const Download = () => {
           </ol>
 
           <a
-            href="https://github.com/rhmnsae/app-dzikir-pagi-petang/releases"
-            target="_blank"
-            rel="noreferrer"
+            href={apkDownloadUrl}
             className="btn btn-invert download-button"
           >
-            Unduh via GitHub
+            Download APK Langsung
+          </a>
+
+          <a
+            href={githubReleasesUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="download-support-link"
+          >
+            Lihat halaman rilis GitHub
           </a>
         </div>
       </div>

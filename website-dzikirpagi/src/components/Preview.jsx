@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 
 const screens = [
-  { title: 'Beranda', meta: 'Ringkasan ibadah', image: '/1-beranda.jpeg' },
-  { title: 'Dzikir Pagi', meta: 'Arab, latin, arti', image: '/2-dzikirpagi.jpeg' },
-  { title: 'Dzikir Petang', meta: 'Urutan bacaan', image: '/3-dzikirpetang.jpeg' },
-  { title: 'Jadwal Shalat', meta: 'Waktu harian', image: '/4-jadwalshalat.jpeg' },
-  { title: 'Arah Kiblat', meta: 'Kompas ringkas', image: '/5-arahkiblat.jpeg' },
-  { title: 'Tasbih Digital', meta: 'Hitung dzikir', image: '/6-tasbih.jpeg' },
-  { title: 'Doa Harian', meta: 'Koleksi doa', image: '/7-doaharian.jpeg' },
-  { title: 'Doa Nabi', meta: 'Koleksi doa nabi', image: '/8-doanabi.jpeg' },
-  { title: 'Kalender Islam', meta: 'Tanggal Hijriah', image: '/9-kalender.jpeg' },
-  { title: 'Pengaturan', meta: 'Mode nyaman', image: '/10-pengaturan.jpeg' },
+  { title: 'Beranda', image: '/1-beranda.jpeg' },
+  { title: 'Dzikir Pagi', image: '/2-dzikirpagi.jpeg' },
+  { title: 'Dzikir Petang', image: '/3-dzikirpetang.jpeg' },
+  { title: 'Jadwal Shalat', image: '/4-jadwalshalat.jpeg' },
+  { title: 'Arah Kiblat', image: '/5-arahkiblat.jpeg' },
+  { title: 'Tasbih Digital', image: '/6-tasbih.jpeg' },
+  { title: 'Doa Harian', image: '/7-doaharian.jpeg' },
+  { title: 'Doa Nabi', image: '/8-doanabi.jpeg' },
+  { title: 'Kalender Islam', image: '/9-kalender.jpeg' },
+  { title: 'Pengaturan', image: '/10-pengaturan.jpeg' },
 ];
 
 const Preview = () => {
@@ -90,7 +90,6 @@ const Preview = () => {
                   Tampilan {String(index + 1).padStart(2, '0')}
                 </span>
                 <h3>{screen.title}</h3>
-                <p>{screen.meta}</p>
               </div>
             </button>
           ))}
@@ -123,7 +122,7 @@ const Preview = () => {
               <button type="button" onClick={showPrevious} aria-label="Tampilan sebelumnya">
                 &lt;
               </button>
-              <p>{activeScreen.meta}</p>
+              <p>{activeScreen.title}</p>
               <button type="button" onClick={showNext} aria-label="Tampilan berikutnya">
                 &gt;
               </button>

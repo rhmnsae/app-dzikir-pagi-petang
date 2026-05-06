@@ -4,8 +4,8 @@ const Features = () => {
     { id: '02', title: 'Jadwal Shalat', desc: 'Waktu shalat harian tersusun rapi sesuai lokasi perangkat.' },
     { id: '03', title: 'Arah Kiblat', desc: 'Kompas kiblat yang langsung terlihat dan mudah dipahami.' },
     { id: '04', title: 'Tasbih Digital', desc: 'Penghitung dzikir praktis dengan ritme interaksi yang sederhana.' },
-    { id: '05', title: 'Doa Harian & Nabi', desc: 'Kumpulan doa pilihan untuk aktivitas harian dan doa para Nabi.' },
-    { id: '06', title: 'Asmaul Husna', desc: 'Daftar 99 nama Allah beserta makna dalam tampilan yang tertata.' },
+    { id: '05', title: 'Doa Harian', desc: 'Kumpulan doa pilihan untuk aktivitas harian yang mudah diamalkan.' },
+    { id: '06', title: 'Doa Nabi', desc: 'Kumpulan doa para Nabi dari Al-Quran dalam tampilan yang tertata.' },
     { id: '07', title: 'Kalender Islam', desc: 'Kalender Hijriah untuk melihat tanggal dan momentum penting.' },
     { id: '08', title: 'Mode Luring', desc: 'Konten inti tetap dapat diakses tanpa internet dan tanpa iklan.' },
   ];
@@ -15,7 +15,11 @@ const Features = () => {
       <div className="container">
         <div className="section-heading">
           <span className="eyebrow">Fitur inti</span>
-          <h2>Lengkap, rapi, tidak berisik.</h2>
+          <h2>Lengkap, rapi, siap dipakai.</h2>
+          <p>
+            Semua menu utama disusun untuk kebutuhan ibadah harian: cepat dibuka,
+            mudah dibaca, dan tetap sederhana.
+          </p>
         </div>
 
         <div className="feature-grid">

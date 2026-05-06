@@ -35,6 +35,7 @@ class AppProvider extends ChangeNotifier with WidgetsBindingObserver {
   bool _adhanEnabled = false;
   bool _useAdhanSound = true;
   bool _dzikirEnabled = false;
+  bool _notificationActionBusy = false;
 
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isPlayingAdzan = false;
@@ -59,6 +60,7 @@ class AppProvider extends ChangeNotifier with WidgetsBindingObserver {
   bool get adhanEnabled => _adhanEnabled;
   bool get useAdhanSound => _useAdhanSound;
   bool get dzikirEnabled => _dzikirEnabled;
+  bool get notificationActionBusy => _notificationActionBusy;
   bool get isPlayingAdzan => _isPlayingAdzan;
   bool get isPlayingSubuh => _isPlayingSubuh;
   bool get isPlayingBiasa => _isPlayingBiasa;
@@ -125,10 +127,7 @@ class AppProvider extends ChangeNotifier with WidgetsBindingObserver {
     _calculatePrayerTimes();
     notifyListeners();
 
-    if (_adhanEnabled || _dzikirEnabled) {
-      unawaited(NotificationService().init());
-      unawaited(_refreshSchedules());
-    }
+    unawaited(_syncNotificationStateWithDevice());
 
     // Try to get fresh location in background
     unawaited(_refreshLocation());
@@ -161,6 +160,8 @@ class AppProvider extends ChangeNotifier with WidgetsBindingObserver {
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
       unawaited(stopAdhanPreview());
+    } else if (state == AppLifecycleState.resumed) {
+      unawaited(_syncNotificationStateWithDevice());
     }
   }
 
@@ -446,44 +447,99 @@ class AppProvider extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  Future<void> toggleAdhan(bool val) async {
-    _adhanEnabled = val;
-    notifyListeners();
-    await _storage.saveNotifAdzan(val);
+  Future<void> _syncNotificationStateWithDevice() async {
+    final ns = NotificationService();
+    await ns.init();
 
-    if (val) {
-      final granted = await NotificationService().requestPermissions();
-      if (!granted) {
-        _adhanEnabled = false;
-        await _storage.saveNotifAdzan(false);
-        await _refreshSchedules();
-        notifyListeners();
-        return;
-      }
+    if (!_adhanEnabled && !_dzikirEnabled) {
+      await _refreshSchedules();
+      return;
+    }
+
+    final allowed = await ns.areNotificationsEnabled();
+    if (!allowed) {
+      _adhanEnabled = false;
+      _dzikirEnabled = false;
+      await _storage.saveNotifAdzan(false);
+      await _storage.saveNotifDzikir(false);
+      await _refreshSchedules();
+      if (!_disposed) notifyListeners();
+      return;
     }
 
     await _refreshSchedules();
-    notifyListeners(); // Final refresh after schedules are updated
   }
 
-  Future<void> toggleDzikir(bool val) async {
+  Future<bool> toggleAdhan(bool val) async {
+    if (_notificationActionBusy) return false;
+    _notificationActionBusy = true;
+    _adhanEnabled = val;
+    notifyListeners();
+
+    try {
+      await _storage.saveNotifAdzan(val);
+
+      if (val) {
+        final granted = await NotificationService().requestPermissions();
+        if (!granted) {
+          _adhanEnabled = false;
+          await _storage.saveNotifAdzan(false);
+          await _refreshSchedules();
+          return false;
+        }
+      }
+
+      await _refreshSchedules();
+      return true;
+    } catch (e, stack) {
+      debugPrint('Gagal memperbarui jadwal notifikasi adzan: $e');
+      debugPrint('$stack');
+      if (val) {
+        _adhanEnabled = false;
+        await _storage.saveNotifAdzan(false);
+      }
+      await _refreshSchedules();
+      return false;
+    } finally {
+      _notificationActionBusy = false;
+      if (!_disposed) notifyListeners();
+    }
+  }
+
+  Future<bool> toggleDzikir(bool val) async {
+    if (_notificationActionBusy) return false;
+    _notificationActionBusy = true;
     _dzikirEnabled = val;
     notifyListeners();
-    await _storage.saveNotifDzikir(val);
 
-    if (val) {
-      final granted = await NotificationService().requestPermissions();
-      if (!granted) {
+    try {
+      await _storage.saveNotifDzikir(val);
+
+      if (val) {
+        final granted = await NotificationService().requestPermissions();
+        if (!granted) {
+          _dzikirEnabled = false;
+          await _storage.saveNotifDzikir(false);
+          await _refreshSchedules();
+          return false;
+        }
+      }
+
+      await _refreshSchedules();
+      return true;
+    } catch (e, stack) {
+      debugPrint('Gagal memperbarui jadwal notifikasi dzikir: $e');
+      debugPrint('$stack');
+      if (val) {
         _dzikirEnabled = false;
         await _storage.saveNotifDzikir(false);
-        await _refreshSchedules();
-        notifyListeners();
-        return;
       }
+      await _refreshSchedules();
+      return false;
+    } finally {
+      _notificationActionBusy = false;
+      if (!_disposed) notifyListeners();
     }
-
-    await _refreshSchedules();
-    notifyListeners(); // Final refresh after schedules are updated
   }
 
   Future<void> setUseAdhanSound(bool val) async {
@@ -538,21 +594,5 @@ class AppProvider extends ChangeNotifier with WidgetsBindingObserver {
         : AssetSource('audio/adhan.mp3');
 
     await _audioPlayer.play(source);
-  }
-
-  Future<void> testDzikirNotification() async {
-    final ns = NotificationService();
-    await ns.init();
-    await ns.showTestDzikirNotification();
-  }
-
-  Future<void> testDemoNotification() async {
-    try {
-      await NotificationService().requestPermissions();
-      await NotificationService().showDemoNotification();
-    } catch (e, stack) {
-      debugPrint('Demo notification error in provider: $e');
-      debugPrint('$stack');
-    }
   }
 }

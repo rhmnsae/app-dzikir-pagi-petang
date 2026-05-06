@@ -12,10 +12,16 @@ class JadwalShalatScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final prov = context.watch<AppProvider>();
     final pt = prov.prayerTimes;
-    final nextName = pt != null ? PrayerTimeService.nextPrayerName(pt) : '';
-    final countdown = pt != null
-        ? PrayerTimeService.countdown(PrayerTimeService.nextPrayerTime(pt))
+    final nextPrayer = pt != null
+        ? PrayerTimeService.getNextPrayerInfo(
+            lat: prov.lat,
+            lon: prov.lon,
+            methodIndex: prov.storage.getCalculationMethod(),
+            now: prov.now,
+          )
         : null;
+    final nextName = nextPrayer?.name ?? '';
+    final countdown = PrayerTimeService.countdown(nextPrayer?.time);
     final prayers = pt != null
         ? PrayerTimeService.getAllTimes(pt)
         : <String, DateTime?>{};
@@ -39,9 +45,14 @@ class JadwalShalatScreen extends StatelessWidget {
                 const AppSectionLabel('SHALAT BERIKUTNYA'),
                 const SizedBox(height: 6),
                 Text(
-                  nextName.isEmpty ? '--' : nextName,
+                  nextName.isEmpty
+                      ? '--'
+                      : nextPrayer?.isTomorrow == true
+                      ? '$nextName BESOK'
+                      : nextName,
                   style: const TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.w900,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
                     color: AppColors.black,
                   ),
                 ),
@@ -65,15 +76,18 @@ class JadwalShalatScreen extends StatelessWidget {
                     Text(
                       prov.cityName,
                       style: const TextStyle(
-                        fontSize: 11, color: AppColors.grey600,
+                        fontSize: 11,
+                        color: AppColors.grey600,
                       ),
                     ),
                     if (prov.locationLoading) ...[
                       const SizedBox(width: 8),
                       const SizedBox(
-                        width: 10, height: 10,
+                        width: 10,
+                        height: 10,
                         child: CircularProgressIndicator(
-                          strokeWidth: 1.5, color: AppColors.black,
+                          strokeWidth: 1.5,
+                          color: AppColors.black,
                         ),
                       ),
                     ],
@@ -90,7 +104,8 @@ class JadwalShalatScreen extends StatelessWidget {
             child: pt == null
                 ? const Center(
                     child: CircularProgressIndicator(
-                      color: AppColors.black, strokeWidth: 1.5,
+                      color: AppColors.black,
+                      strokeWidth: 1.5,
                     ),
                   )
                 : ListView(
@@ -98,14 +113,22 @@ class JadwalShalatScreen extends StatelessWidget {
                     children: [
                       ...prayers.entries.map((e) {
                         final isNext = e.key == nextName;
+                        final isTodayNext =
+                            isNext && nextPrayer?.isTomorrow == false;
                         return Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 14),
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
                           decoration: BoxDecoration(
-                            color: isNext ? AppColors.black : Colors.transparent,
+                            color: isTodayNext
+                                ? AppColors.black
+                                : Colors.transparent,
                             border: const Border(
                               bottom: BorderSide(
-                                  color: AppColors.grey200, width: 1),
+                                color: AppColors.grey200,
+                                width: 1,
+                              ),
                             ),
                           ),
                           child: Row(
@@ -118,7 +141,7 @@ class JadwalShalatScreen extends StatelessWidget {
                                       ? FontWeight.w900
                                       : FontWeight.w500,
                                   fontSize: 15,
-                                  color: isNext
+                                  color: isTodayNext
                                       ? AppColors.white
                                       : AppColors.black,
                                 ),
@@ -128,7 +151,7 @@ class JadwalShalatScreen extends StatelessWidget {
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 15,
-                                  color: isNext
+                                  color: isTodayNext
                                       ? AppColors.grey400
                                       : AppColors.grey600,
                                 ),
@@ -136,7 +159,7 @@ class JadwalShalatScreen extends StatelessWidget {
                             ],
                           ),
                         );
-                      }).toList(),
+                      }),
                       const SizedBox(height: 32),
                     ],
                   ),

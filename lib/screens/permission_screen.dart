@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 import '../core/theme/app_colors.dart';
+import '../providers/app_provider.dart';
+import '../services/notification_service.dart';
 import '../widgets/app_bar_helpers.dart';
 import 'home_screen.dart';
 
@@ -25,12 +28,13 @@ class _PermissionScreenState extends State<PermissionScreen> {
 
   Future<void> _checkInitial() async {
     final loc = await Geolocator.checkPermission();
-    final notif = await Permission.notification.status;
+    final notif = await NotificationService().areNotificationsEnabled();
     if (mounted) {
       setState(() {
-        _locationGranted = loc == LocationPermission.always ||
+        _locationGranted =
+            loc == LocationPermission.always ||
             loc == LocationPermission.whileInUse;
-        _notifGranted = notif.isGranted;
+        _notifGranted = notif;
       });
     }
   }
@@ -49,7 +53,8 @@ class _PermissionScreenState extends State<PermissionScreen> {
     }
     if (mounted) {
       setState(() {
-        _locationGranted = perm == LocationPermission.always ||
+        _locationGranted =
+            perm == LocationPermission.always ||
             perm == LocationPermission.whileInUse;
         _loading = false;
       });
@@ -58,14 +63,17 @@ class _PermissionScreenState extends State<PermissionScreen> {
 
   Future<void> _requestNotif() async {
     setState(() => _loading = true);
-    final status = await Permission.notification.status;
-    if (status.isPermanentlyDenied) {
+    final granted = await NotificationService().requestPermissions();
+    if (!granted && await Permission.notification.isPermanentlyDenied) {
       await openAppSettings();
-    } else {
-      final result = await Permission.notification.request();
-      if (mounted) {
-        setState(() => _notifGranted = result.isGranted);
-      }
+    }
+    if (granted && mounted) {
+      final provider = context.read<AppProvider>();
+      await provider.toggleAdhan(true);
+      await provider.toggleDzikir(true);
+    }
+    if (mounted) {
+      setState(() => _notifGranted = granted);
     }
     if (mounted) setState(() => _loading = false);
   }
@@ -73,7 +81,8 @@ class _PermissionScreenState extends State<PermissionScreen> {
   void _proceed() {
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const HomeScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const HomeScreen(),
         transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
       ),
@@ -233,8 +242,9 @@ class _PermissionTile extends StatelessWidget {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               border: Border.all(
-                  color: granted ? AppColors.white : AppColors.grey400,
-                  width: 1.5),
+                color: granted ? AppColors.white : AppColors.grey400,
+                width: 1.5,
+              ),
             ),
             child: Text(
               granted ? '✓' : '?',
@@ -276,7 +286,9 @@ class _PermissionTile extends StatelessWidget {
                     onTap: onTap,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 7),
+                        horizontal: 12,
+                        vertical: 7,
+                      ),
                       decoration: const BoxDecoration(color: AppColors.black),
                       child: const Text(
                         'IZINKAN',

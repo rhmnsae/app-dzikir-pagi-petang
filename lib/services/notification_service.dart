@@ -23,6 +23,7 @@ class NotificationService {
   static const int _dzikirPagiBaseId = 20000;
   static const int _dzikirPetangBaseId = 30000;
   static const int _slotsPerDzikirDay = 10;
+  static const String _smallIcon = 'ic_notification';
 
   static const List<String> _prayerNames = [
     'Subuh',
@@ -38,9 +39,7 @@ class NotificationService {
     tz.initializeTimeZones();
     await _configureLocalTimezone();
 
-    const androidInitialize = AndroidInitializationSettings(
-      '@drawable/ic_notification',
-    );
+    const androidInitialize = AndroidInitializationSettings(_smallIcon);
     const darwinInitialize = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -75,25 +74,38 @@ class NotificationService {
     if (!_initialized) await init();
 
     try {
-      final status = await Permission.notification.status;
-      if (!status.isGranted) {
-        final requestedStatus = await Permission.notification.request();
-        if (!requestedStatus.isGranted) return false;
-      }
-
       final androidImplementation = _notificationsPlugin
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
           >();
 
       if (androidImplementation != null) {
-        await androidImplementation.requestNotificationsPermission();
+        var notificationsEnabled =
+            await androidImplementation.areNotificationsEnabled() ?? true;
+
+        if (!notificationsEnabled) {
+          final granted = await androidImplementation
+              .requestNotificationsPermission();
+          notificationsEnabled =
+              granted ??
+              await androidImplementation.areNotificationsEnabled() ??
+              false;
+        }
+
+        if (!notificationsEnabled) {
+          final fallbackStatus = await Permission.notification.request();
+          notificationsEnabled = fallbackStatus.isGranted;
+        }
+
+        if (!notificationsEnabled) return false;
 
         final canSchedule = await androidImplementation
             .canScheduleExactNotifications();
         if (canSchedule == false) {
           await androidImplementation.requestExactAlarmsPermission();
         }
+
+        return true;
       }
 
       final iosImplementation = _notificationsPlugin
@@ -109,11 +121,27 @@ class NotificationService {
         return granted ?? false;
       }
 
-      return true;
+      final status = await Permission.notification.request();
+      return status.isGranted;
     } catch (e) {
       debugPrint('Error requesting notification permissions: $e');
       return false;
     }
+  }
+
+  Future<bool> areNotificationsEnabled() async {
+    if (!_initialized) await init();
+
+    final androidImplementation = _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (androidImplementation != null) {
+      return await androidImplementation.areNotificationsEnabled() ?? true;
+    }
+
+    final status = await Permission.notification.status;
+    return status.isGranted;
   }
 
   AndroidNotificationDetails _adhanAndroidDetails() {
@@ -127,8 +155,9 @@ class NotificationService {
       sound: RawResourceAndroidNotificationSound('adhan'),
       audioAttributesUsage: AudioAttributesUsage.alarm,
       enableVibration: true,
-      icon: '@drawable/ic_notification',
-      largeIcon: DrawableResourceAndroidBitmap('logo_notification'),
+      category: AndroidNotificationCategory.alarm,
+      visibility: NotificationVisibility.public,
+      icon: _smallIcon,
     );
   }
 
@@ -143,8 +172,9 @@ class NotificationService {
       sound: RawResourceAndroidNotificationSound('adhan_subuh'),
       audioAttributesUsage: AudioAttributesUsage.alarm,
       enableVibration: true,
-      icon: '@drawable/ic_notification',
-      largeIcon: DrawableResourceAndroidBitmap('logo_notification'),
+      category: AndroidNotificationCategory.alarm,
+      visibility: NotificationVisibility.public,
+      icon: _smallIcon,
     );
   }
 
@@ -158,8 +188,9 @@ class NotificationService {
       priority: Priority.max,
       playSound: true,
       enableVibration: true,
-      icon: '@drawable/ic_notification',
-      largeIcon: DrawableResourceAndroidBitmap('logo_notification'),
+      category: AndroidNotificationCategory.reminder,
+      visibility: NotificationVisibility.public,
+      icon: _smallIcon,
     );
   }
 
@@ -172,43 +203,10 @@ class NotificationService {
       priority: Priority.high,
       playSound: true,
       enableVibration: true,
-      icon: '@drawable/ic_notification',
-      largeIcon: DrawableResourceAndroidBitmap('logo_notification'),
+      category: AndroidNotificationCategory.reminder,
+      visibility: NotificationVisibility.public,
+      icon: _smallIcon,
     );
-  }
-
-  AndroidNotificationDetails _demoAndroidDetails() {
-    return const AndroidNotificationDetails(
-      'demo_channel_v2',
-      'Demo',
-      channelDescription: 'Channel tes demo',
-      importance: Importance.max,
-      priority: Priority.max,
-      playSound: true,
-      enableVibration: true,
-      icon: '@drawable/ic_notification',
-      largeIcon: DrawableResourceAndroidBitmap('logo_notification'),
-    );
-  }
-
-  Future<void> showDemoNotification() async {
-    try {
-      if (!_initialized) await init();
-
-      await _notificationsPlugin.show(
-        id: 99999,
-        title: 'Demo Notifikasi',
-        body:
-            'Ini adalah contoh tes tampilan notifikasi dari aplikasi Dzikir Pagi & Petang.',
-        notificationDetails: NotificationDetails(
-          android: _demoAndroidDetails(),
-          iOS: const DarwinNotificationDetails(),
-        ),
-      );
-    } catch (e, stack) {
-      debugPrint('Demo notification error: $e');
-      debugPrint('$stack');
-    }
   }
 
   Future<void> schedulePeriodicDzikir(
@@ -347,39 +345,6 @@ class NotificationService {
         iOS: DarwinNotificationDetails(sound: soundName),
       ),
       payload: 'adhan_$prayerName',
-    );
-  }
-
-  Future<void> showTestNotification(bool useAdhanSound) async {
-    if (!_initialized) await init();
-
-    final androidDetails = useAdhanSound
-        ? _adhanAndroidDetails()
-        : _adhanDefaultAndroidDetails();
-    final soundName = useAdhanSound ? 'adhan.mp3' : null;
-
-    await _notificationsPlugin.show(
-      id: 99998,
-      title: useAdhanSound ? 'Test Adzan' : 'Test Waktu Sholat',
-      body: 'Ini adalah simulasi notifikasi waktu sholat.',
-      notificationDetails: NotificationDetails(
-        android: androidDetails,
-        iOS: DarwinNotificationDetails(sound: soundName),
-      ),
-    );
-  }
-
-  Future<void> showTestDzikirNotification() async {
-    if (!_initialized) await init();
-
-    await _notificationsPlugin.show(
-      id: 88888,
-      title: 'Test Dzikir Pagi/Petang',
-      body: 'Waktunya Dzikir! Ini adalah simulasi notifikasi dzikir.',
-      notificationDetails: NotificationDetails(
-        android: _dzikirAndroidDetails(),
-        iOS: const DarwinNotificationDetails(),
-      ),
     );
   }
 

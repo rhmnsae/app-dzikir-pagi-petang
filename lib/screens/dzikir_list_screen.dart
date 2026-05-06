@@ -17,12 +17,10 @@ class DzikirListScreen extends StatelessWidget {
     final prov = context.watch<AppProvider>();
     final dzikirs = isPagi ? dzikirPagiList : dzikirPetangList;
     final counters = isPagi ? prov.pagiCounters : prov.petangCounters;
-    final completed = dzikirs
-        .where((d) {
-          final idx = dzikirs.indexOf(d);
-          return counters[idx] >= d.repeatCount;
-        })
-        .length;
+    final completed = dzikirs.where((d) {
+      final idx = dzikirs.indexOf(d);
+      return counters[idx] >= d.repeatCount;
+    }).length;
     final progressVal = (completed / dzikirs.length).clamp(0.0, 1.0);
 
     return Scaffold(
@@ -49,7 +47,7 @@ class DzikirListScreen extends StatelessWidget {
                       child: CustomPaint(
                         painter: GridPainter(
                           spacing: 28.0,
-                          color: AppColors.black.withOpacity(0.06),
+                          color: AppColors.black.withValues(alpha: 0.06),
                           strokeWidth: 1.0,
                         ),
                       ),
@@ -62,7 +60,10 @@ class DzikirListScreen extends StatelessWidget {
                         children: [
                           const Text(
                             'Reset Progress?',
-                            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 16,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           Text(
@@ -75,17 +76,23 @@ class DzikirListScreen extends StatelessWidget {
                             children: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context),
-                                child: const Text('BATAL',
-                                    style: TextStyle(
-                                        color: AppColors.grey600,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 1)),
+                                child: const Text(
+                                  'BATAL',
+                                  style: TextStyle(
+                                    color: AppColors.grey600,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
                               ),
                               const SizedBox(width: 8),
                               TextButton(
                                 onPressed: () {
-                                  if (isPagi) prov.resetAllPagi();
-                                  else prov.resetAllPetang();
+                                  if (isPagi) {
+                                    prov.resetAllPagi();
+                                  } else {
+                                    prov.resetAllPetang();
+                                  }
                                   Navigator.pop(context);
                                 },
                                 style: TextButton.styleFrom(
@@ -94,11 +101,14 @@ class DzikirListScreen extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(0),
                                   ),
                                 ),
-                                child: const Text('RESET',
-                                    style: TextStyle(
-                                        color: AppColors.white,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 1)),
+                                child: const Text(
+                                  'RESET',
+                                  style: TextStyle(
+                                    color: AppColors.white,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -147,7 +157,9 @@ class DzikirListScreen extends StatelessWidget {
                 LinearProgressIndicator(
                   value: progressVal,
                   backgroundColor: AppColors.grey200,
-                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.black),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppColors.black,
+                  ),
                   minHeight: 1.5,
                 ),
               ],
@@ -165,8 +177,7 @@ class DzikirListScreen extends StatelessWidget {
                 final dzikir = dzikirs[index];
                 final counter = counters[index];
                 final done = counter >= dzikir.repeatCount;
-                final progress =
-                    (counter / dzikir.repeatCount).clamp(0.0, 1.0);
+                final progress = (counter / dzikir.repeatCount).clamp(0.0, 1.0);
 
                 return GestureDetector(
                   onTap: () => Navigator.push(
@@ -183,7 +194,9 @@ class DzikirListScreen extends StatelessWidget {
                   ),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: done ? AppColors.grey100.withValues(alpha: 0.8) : Colors.transparent,
+                      color: done
+                          ? AppColors.grey100.withValues(alpha: 0.8)
+                          : Colors.transparent,
                       border: const Border(
                         bottom: BorderSide(color: AppColors.grey200, width: 1),
                       ),
@@ -192,7 +205,9 @@ class DzikirListScreen extends StatelessWidget {
                       children: [
                         Padding(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 14),
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
@@ -264,7 +279,8 @@ class DzikirListScreen extends StatelessWidget {
                             value: progress,
                             backgroundColor: Colors.transparent,
                             valueColor: const AlwaysStoppedAnimation<Color>(
-                                AppColors.black),
+                              AppColors.black,
+                            ),
                             minHeight: 1,
                           ),
                       ],

@@ -27,16 +27,29 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final prov = context.watch<AppProvider>();
     final pt = prov.prayerTimes;
-    final nextName = pt != null ? PrayerTimeService.nextPrayerName(pt) : '--';
-    final nextTime = pt != null ? PrayerTimeService.nextPrayerTime(pt) : null;
+    final nextPrayer = pt != null
+        ? PrayerTimeService.getNextPrayerInfo(
+            lat: prov.lat,
+            lon: prov.lon,
+            methodIndex: prov.storage.getCalculationMethod(),
+            now: prov.now,
+          )
+        : null;
+    final nextName = nextPrayer?.name ?? '--';
+    final nextTime = nextPrayer?.time;
     final countdown = PrayerTimeService.countdown(nextTime);
     final countdownStr = PrayerTimeService.formatCountdown(countdown);
 
     final pagiDone = prov.pagiCounters
-        .where((c) => c >= dzikirPagiList[prov.pagiCounters.indexOf(c)].repeatCount)
+        .where(
+          (c) => c >= dzikirPagiList[prov.pagiCounters.indexOf(c)].repeatCount,
+        )
         .length;
     final petangDone = prov.petangCounters
-        .where((c) => c >= dzikirPetangList[prov.petangCounters.indexOf(c)].repeatCount)
+        .where(
+          (c) =>
+              c >= dzikirPetangList[prov.petangCounters.indexOf(c)].repeatCount,
+        )
         .length;
 
     return Scaffold(
@@ -87,7 +100,13 @@ class HomeScreen extends StatelessWidget {
                   // Next prayer strip
                   Row(
                     children: [
-                      AppSectionLabel(nextName.isEmpty ? '--' : nextName),
+                      AppSectionLabel(
+                        nextName.isEmpty
+                            ? '--'
+                            : nextPrayer?.isTomorrow == true
+                            ? '$nextName BESOK'
+                            : nextName,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -101,7 +120,9 @@ class HomeScreen extends StatelessWidget {
                       ),
                       if (nextTime != null)
                         Text(
-                          PrayerTimeService.formatTime(nextTime),
+                          nextPrayer?.isTomorrow == true
+                              ? '${PrayerTimeService.formatTime(nextTime)} besok'
+                              : PrayerTimeService.formatTime(nextTime),
                           style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.grey600,
@@ -129,7 +150,8 @@ class HomeScreen extends StatelessWidget {
                       Expanded(
                         child: _DzikirMainButton(
                           label: 'DZIKIR\nPAGI',
-                          subtitle: '$pagiDone / ${dzikirPagiList.length} selesai',
+                          subtitle:
+                              '$pagiDone / ${dzikirPagiList.length} selesai',
                           progress: pagiDone / dzikirPagiList.length,
                           isActive: _isPagiTime,
                           onTap: () => Navigator.push(
@@ -147,7 +169,8 @@ class HomeScreen extends StatelessWidget {
                       Expanded(
                         child: _DzikirMainButton(
                           label: 'DZIKIR\nPETANG',
-                          subtitle: '$petangDone / ${dzikirPetangList.length} selesai',
+                          subtitle:
+                              '$petangDone / ${dzikirPetangList.length} selesai',
                           progress: petangDone / dzikirPetangList.length,
                           isActive: !_isPagiTime,
                           onTap: () => Navigator.push(
@@ -172,39 +195,59 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   _FeatureRow(
                     label: 'Jadwal Shalat',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => ChangeNotifierProvider.value(value: prov, child: const JadwalShalatScreen()),
-                    )),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChangeNotifierProvider.value(
+                          value: prov,
+                          child: const JadwalShalatScreen(),
+                        ),
+                      ),
+                    ),
                   ),
                   _FeatureRow(
                     label: 'Kalender Islam',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => const KalenderIslamScreen(),
-                    )),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const KalenderIslamScreen(),
+                      ),
+                    ),
                   ),
                   _FeatureRow(
                     label: 'Tasbih Digital',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => const TasbihScreen(),
-                    )),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const TasbihScreen()),
+                    ),
                   ),
                   _FeatureRow(
                     label: 'Doa Harian',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => const DoaHarianScreen(),
-                    )),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const DoaHarianScreen(),
+                      ),
+                    ),
                   ),
                   _FeatureRow(
                     label: 'Doa Para Nabi',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => const DoaNabiScreen(),
-                    )),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const DoaNabiScreen()),
+                    ),
                   ),
                   _FeatureRow(
                     label: 'Arah Kiblat',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => ChangeNotifierProvider.value(value: prov, child: const QiblaScreen()),
-                    )),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChangeNotifierProvider.value(
+                          value: prov,
+                          child: const QiblaScreen(),
+                        ),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 24),
                   const AppBlackLine(),
@@ -232,38 +275,57 @@ class HomeScreen extends StatelessWidget {
                         color: Colors.transparent,
                       ),
                       child: Column(
-                        children: PrayerTimeService.getAllTimes(pt).entries.map((e) {
-                          final isNext = e.key == nextName;
-                          return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            decoration: const BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(color: AppColors.grey200, width: 1),
+                        children: PrayerTimeService.getAllTimes(pt).entries.map(
+                          (e) {
+                            final isNext =
+                                e.key == nextName &&
+                                nextPrayer?.isTomorrow == false;
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
                               ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  e.key,
-                                  style: TextStyle(
-                                    fontWeight: isNext ? FontWeight.w900 : FontWeight.w600,
-                                    fontSize: 13,
-                                    color: isNext ? AppColors.black : AppColors.grey800,
+                              decoration: const BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: AppColors.grey200,
+                                    width: 1,
                                   ),
                                 ),
-                                Text(
-                                  PrayerTimeService.formatTime(e.value),
-                                  style: TextStyle(
-                                    fontWeight: isNext ? FontWeight.w900 : FontWeight.w700,
-                                    fontSize: 13,
-                                    color: isNext ? AppColors.black : AppColors.grey600,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    e.key,
+                                    style: TextStyle(
+                                      fontWeight: isNext
+                                          ? FontWeight.w900
+                                          : FontWeight.w600,
+                                      fontSize: 13,
+                                      color: isNext
+                                          ? AppColors.black
+                                          : AppColors.grey800,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
+                                  Text(
+                                    PrayerTimeService.formatTime(e.value),
+                                    style: TextStyle(
+                                      fontWeight: isNext
+                                          ? FontWeight.w900
+                                          : FontWeight.w700,
+                                      fontSize: 13,
+                                      color: isNext
+                                          ? AppColors.black
+                                          : AppColors.grey600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ).toList(),
                       ),
                     )
                   else
@@ -272,12 +334,14 @@ class HomeScreen extends StatelessWidget {
                         padding: EdgeInsets.all(16.0),
                         child: Text(
                           'Menunggu lokasi...',
-                          style: TextStyle(fontSize: 12, color: AppColors.grey600),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.grey600,
+                          ),
                         ),
                       ),
                     ),
                   const SizedBox(height: 40),
-
                 ],
               ),
             ),
@@ -338,8 +402,7 @@ class _DzikirMainButton extends StatelessWidget {
             const SizedBox(height: 10),
             LinearProgressIndicator(
               value: progress.clamp(0.0, 1.0),
-              backgroundColor:
-                  isActive ? AppColors.grey600 : AppColors.grey200,
+              backgroundColor: isActive ? AppColors.grey600 : AppColors.grey200,
               valueColor: AlwaysStoppedAnimation<Color>(
                 isActive ? AppColors.white : AppColors.black,
               ),
