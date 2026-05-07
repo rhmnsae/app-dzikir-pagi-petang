@@ -30,7 +30,7 @@ Aplikasi Flutter untuk membantu pengguna membaca dzikir pagi dan petang, melihat
 - Deteksi lokasi dan nama kota melalui GPS.
 - Arah kiblat dan estimasi jarak ke Makkah.
 - Tasbih digital.
-- Doa harian, doa nabi, Asmaul Husna, dan kalender Islam.
+- Doa harian, doa nabi, dan kalender Islam.
 - Logo aplikasi, splash screen, launcher icon, dan ikon notifikasi memakai aset logo yang konsisten.
 
 ## Penyimpanan Lokal
